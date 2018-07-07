@@ -4,6 +4,7 @@ using Smod2.Events;
 using Smod2.EventHandlers;
 using System.Collections.Generic;
 using System.Linq;
+using Smod2.EventSystem.Events;
 
 namespace Smod.TestPlugin
 {
@@ -48,18 +49,18 @@ namespace Smod.TestPlugin
 
         public void OnRoundStart(RoundStartEvent ev)
         {
-            Server server = ev.Server;
-            if (ConfigManager.Manager.Config.GetBoolValue("SCP049_DISABLE", false) == false) { enabledSCPs.Add((byte)Role.SCP_049); }
-//            if (ConfigManager.Manager.Config.GetBoolValue("SCP079_DISABLE", true) == false) { enabledSCPs.Add((byte)Classes.SCP_079); }
-            if (ConfigManager.Manager.Config.GetBoolValue("SCP096_DISABLE", false) == false) { enabledSCPs.Add((byte)Role.SCP_096); }
-            if (ConfigManager.Manager.Config.GetBoolValue("SCP106_DISABLE", false) == false) { enabledSCPs.Add((byte)Role.SCP_106); }
-            if (ConfigManager.Manager.Config.GetBoolValue("SCP173_DISABLE", false) == false) { enabledSCPs.Add((byte)Role.SCP_173); }
-//            if (ConfigManager.Manager.Config.GetBoolValue("SCP457_DISABLE", true) == false) { enabledSCPs.Add((byte)Classes.SCP_457); }
+            if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
+            if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
+            if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
+            if (ConfigManager.Manager.Config.GetBoolValue("scp173_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp173_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_173); } }
+            if (ConfigManager.Manager.Config.GetBoolValue("scp939_53_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_53_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_53); } }
+            if (ConfigManager.Manager.Config.GetBoolValue("scp939_89_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_89_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_89); } }
+
             allowspawn = true;
             number = 0;
             List<byte> FilledTeams = new List<byte>();
             List<string> blacklist = new List<string>();
-            foreach (Player player in server.GetPlayers())
+            foreach (Player player in ev.Server.GetPlayers())
             {
                 blacklist.Add(player.SteamId);
                 FilledTeams.Add((byte)player.TeamRole.Team);
