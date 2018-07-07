@@ -10,10 +10,10 @@ namespace Smod.TestPlugin
         name = "LaterJoin",
         description = "Allow those who join just after round start to spawn",
         id = "rex.later.join",
-        version = "1.1.2",
+        version = "1.1.3",
         SmodMajor = 3,
         SmodMinor = 1,
-        SmodRevision = 0
+        SmodRevision = 7
         )]
     class LaterJoin : Plugin
     {
