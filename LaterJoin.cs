@@ -10,9 +10,9 @@ namespace Smod.TestPlugin
         name = "LaterJoin",
         description = "Allow those who join just after round start to spawn",
         id = "rex.later.join",
-        version = "1.1.1",
+        version = "1.1.2",
         SmodMajor = 3,
-        SmodMinor = 0,
+        SmodMinor = 1,
         SmodRevision = 0
         )]
     class LaterJoin : Plugin
@@ -32,10 +32,8 @@ namespace Smod.TestPlugin
                     string host = "https://storm37000.tk/addons/";
                     if (SSLerr) { host = "http://74.91.115.126/addons/"; }
                     ushort version = ushort.Parse(this.Details.version.Replace(".", string.Empty));
-                    byte smodv = byte.Parse(this.Details.SmodMajor + "" + this.Details.SmodMinor);
                     ushort fileContentV = ushort.Parse(new System.Net.WebClient().DownloadString(host + this.Details.name + ".ver"));
-                    byte fileContentS = byte.Parse(new System.Net.WebClient().DownloadString(host + "SM_" + this.Details.name + ".ver"));
-                    if (fileContentV > version && smodv == fileContentS)
+                    if (fileContentV > version)
                     {
                         this.Info("Your version is out of date, please visit the Smod discord and download the newest version");
                     }
