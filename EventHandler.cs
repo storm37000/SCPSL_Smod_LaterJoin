@@ -43,8 +43,11 @@ namespace Smod.TestPlugin
 
         public void OnRoundEnd(RoundEndEvent ev)
         {
-            t.Enabled = false;
-            if (allowspawn) { allowspawn = false; }
+            if (ev.Round.Duration >= 3)
+            {
+                t.Enabled = false;
+                if (allowspawn) { allowspawn = false; }
+            }
         }
 
         public void OnRoundStart(RoundStartEvent ev)
