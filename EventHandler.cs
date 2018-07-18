@@ -16,9 +16,8 @@ namespace Smod.TestPlugin
         private int number;
         private List<byte> FilledTeams;
         private List<string> blacklist;
+        private List<byte> enabledSCPs;
         private static readonly System.Random getrandom = new System.Random();
-
-        List<byte> enabledSCPs = new List<byte>();
 
         public EventHandler(Plugin plugin)
         {
@@ -31,6 +30,7 @@ namespace Smod.TestPlugin
             if (allowspawn) { allowspawn = false; }
             FilledTeams = null;
             blacklist = null;
+            enabledSCPs = null;
         }
 
         private System.Timers.Timer t = new System.Timers.Timer();
@@ -61,6 +61,7 @@ namespace Smod.TestPlugin
 
         public void OnRoundStart(RoundStartEvent ev)
         {
+            enabledSCPs = new List<byte>();
             if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
@@ -99,15 +100,7 @@ namespace Smod.TestPlugin
             switch (TeamID)
             {
                 case (byte)Smod2.API.Team.SCP:
-                    if (enabledSCPs.Count != 0)
-                    {
-                        return enabledSCPs[getrandom.Next(0, enabledSCPs.Count)];
-                    } else
-                    {
-                        plugin.Debug("Tried to select an SCP but all SCP slots are filled! Choosing another class...");
-                        return 255;
-                    }
-
+                    return enabledSCPs[getrandom.Next(0, enabledSCPs.Count)];
                 case (byte)Smod2.API.Team.NINETAILFOX:
                     return (byte)Role.FACILITY_GUARD;
                 case (byte)Smod2.API.Team.CHAOS_INSURGENCY:
@@ -121,7 +114,7 @@ namespace Smod.TestPlugin
                 case (byte)Smod2.API.Team.TUTORIAL:
                     return (byte)Role.TUTORIAL;
                 default:
-                    plugin.Error("Tried to select an invalid team! Choosing another one...");
+                    plugin.Error("Tried to select an invalid team! Attempting using filler!");
                     return 255;
             }
         }
@@ -169,7 +162,15 @@ namespace Smod.TestPlugin
                     plugin.Debug("is within index");
                     byte chosenteam = queue[FilledTeams.Count];
                     chosenclass = TeamIDtoClassID(chosenteam);
-                    FilledTeams.Add(chosenteam);
+                    if (chosenclass == 255)
+                    {
+                        plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
+                        chosenclass = (byte)Role.CLASSD;
+                    }
+                    else
+                    {
+                        FilledTeams.Add(chosenteam);
+                    }
                 }
                 else if(ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", false) == false)
                 {
@@ -252,10 +253,6 @@ namespace Smod.TestPlugin
                 if (!result)
                 {
                     byte chosenclass = ChooseClass(player);
-                    while (chosenclass == 255)
-                    {
-                        chosenclass = ChooseClass(player);
-                    }
                     plugin.Info("Player " + player.Name + " joined late!  Setting their class to " + chosenclass);
                     player.ChangeRole((Role)chosenclass, true, true);
                     blacklist.Add(player.SteamId);
