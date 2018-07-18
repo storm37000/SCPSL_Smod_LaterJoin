@@ -14,9 +14,9 @@ namespace Smod.TestPlugin
         private Plugin plugin;
         private bool allowspawn = false;
         private int number;
-        private List<byte> FilledTeams;
-        private List<string> blacklist;
-        private List<byte> enabledSCPs;
+        private List<byte> FilledTeams = new List<byte>();
+        private List<string> blacklist = new List<string>();
+        private List<byte> enabledSCPs = new List<byte>();
         private static readonly System.Random getrandom = new System.Random();
 
         public EventHandler(Plugin plugin)
@@ -28,9 +28,9 @@ namespace Smod.TestPlugin
         {
             t.Enabled = false;
             if (allowspawn) { allowspawn = false; }
-            FilledTeams = null;
-            blacklist = null;
-            enabledSCPs = null;
+            FilledTeams.Clear();
+            blacklist.Clear();
+            enabledSCPs.Clear();
         }
 
         private System.Timers.Timer t = new System.Timers.Timer();
@@ -61,16 +61,13 @@ namespace Smod.TestPlugin
 
         public void OnRoundStart(RoundStartEvent ev)
         {
-            enabledSCPs = new List<byte>();
+            allowspawn = true;
             if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp173_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp173_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_173); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp939_53_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_53_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_53); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp939_89_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_89_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_89); } }
-            allowspawn = true;
-            List<byte> FilledTeams = new List<byte>();
-            List<string> blacklist = new List<string>();
             if (plugin.GetConfigIntList("lj_queue").Count() != 0)
             {
                 number = 0;
@@ -87,7 +84,6 @@ namespace Smod.TestPlugin
                 InitTimer(time);
             } else if (time == -1)
             {
-
             } else
             {
                 plugin.Error("Config for lj_time of " + time + " is not a valid value! Using default instead.");
