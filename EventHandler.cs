@@ -18,6 +18,7 @@ namespace Smod.TestPlugin
         private List<string> blacklist = new List<string>();
         private List<byte> enabledSCPs = new List<byte>();
         private static readonly System.Random getrandom = new System.Random();
+        private System.Timers.Timer t = new System.Timers.Timer();
 
         public EventHandler(Plugin plugin)
         {
@@ -33,7 +34,6 @@ namespace Smod.TestPlugin
             enabledSCPs.Clear();
         }
 
-        private System.Timers.Timer t = new System.Timers.Timer();
         private void InitTimer(int time)
         {
             t.Interval = time * 1000;
