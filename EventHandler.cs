@@ -8,14 +8,14 @@ using System.Linq;
 namespace Smod.TestPlugin
 {
 
-    class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd
+    class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate
     {
 
         private Plugin plugin;
         private bool allowspawn = false;
-        private int number = 0;
-        private List<byte> FilledTeams = new List<byte>();
-        private List<string> blacklist = new List<string>();
+        private int number;
+        private List<byte> FilledTeams;
+        private List<string> blacklist;
         private static readonly System.Random getrandom = new System.Random();
 
         List<byte> enabledSCPs = new List<byte>();
@@ -25,8 +25,15 @@ namespace Smod.TestPlugin
             this.plugin = plugin;
         }
 
-        System.Timers.Timer t = new System.Timers.Timer();
+        private void cleanup()
+        {
+            t.Enabled = false;
+            if (allowspawn) { allowspawn = false; }
+            FilledTeams = null;
+            blacklist = null;
+        }
 
+        private System.Timers.Timer t = new System.Timers.Timer();
         private void InitTimer(int time)
         {
             t.Interval = time * 1000;
@@ -34,18 +41,21 @@ namespace Smod.TestPlugin
             t.Enabled = true;
             t.Elapsed += delegate
             {
-                allowspawn = false;
-                t.Enabled = false;
                 plugin.Debug("Time Over");
+                cleanup();
             };
+        }
+
+        public void OnDetonate()
+        {
+            cleanup();
         }
 
         public void OnRoundEnd(RoundEndEvent ev)
         {
             if (ev.Round.Duration >= 3)
             {
-                t.Enabled = false;
-                if (allowspawn) { allowspawn = false; }
+                cleanup();
             }
         }
 
@@ -57,11 +67,13 @@ namespace Smod.TestPlugin
             if (ConfigManager.Manager.Config.GetBoolValue("scp173_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp173_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_173); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp939_53_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_53_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_53); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp939_89_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_89_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_89); } }
-
             allowspawn = true;
-            number = 0;
             List<byte> FilledTeams = new List<byte>();
             List<string> blacklist = new List<string>();
+            if (plugin.GetConfigIntList("lj_queue").Count() != 0)
+            {
+                number = 0;
+            }
             foreach (Player player in ev.Server.GetPlayers())
             {
                 blacklist.Add(player.SteamId);
@@ -74,7 +86,7 @@ namespace Smod.TestPlugin
                 InitTimer(time);
             } else if (time == -1)
             {
-                allowspawn = true;
+
             } else
             {
                 plugin.Error("Config for lj_time of " + time + " is not a valid value! Using default instead.");

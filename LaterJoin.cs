@@ -10,7 +10,7 @@ namespace Smod.TestPlugin
         name = "LaterJoin",
         description = "Allow those who join just after round start to spawn",
         id = "rex.later.join",
-        version = "1.1.4",
+        version = "1.1.5",
         SmodMajor = 3,
         SmodMinor = 1,
         SmodRevision = 7
@@ -56,11 +56,12 @@ namespace Smod.TestPlugin
         {
             // Register Events
             EventHandler events = new EventHandler(this);
-            AddEventHandler(typeof(IEventHandlerPlayerJoin), events, Priority.High);
-            AddEventHandler(typeof(IEventHandlerRoundStart), events, Priority.High);
-            AddEventHandler(typeof(IEventHandlerRoundEnd), events, Priority.High);
-            AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
-            AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
+            this.AddEventHandler(typeof(IEventHandlerPlayerJoin), events, Priority.High);
+            this.AddEventHandler(typeof(IEventHandlerRoundStart), events, Priority.High);
+            this.AddEventHandler(typeof(IEventHandlerRoundEnd), events, Priority.High);
+            this.AddEventHandler(typeof(IEventHandlerWarheadDetonate), events, Priority.Highest);
+            this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
+            this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
         }
     }
 }
