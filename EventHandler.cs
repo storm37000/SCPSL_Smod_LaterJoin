@@ -17,6 +17,7 @@ namespace Smod.TestPlugin
         private List<byte> FilledTeams = new List<byte>();
         private List<string> blacklist = new List<string>();
         private List<byte> enabledSCPs = new List<byte>();
+        private bool decond = false;
         private static readonly System.Random getrandom = new System.Random();
         private System.Timers.Timer t = new System.Timers.Timer();
 
@@ -53,7 +54,7 @@ namespace Smod.TestPlugin
 
         public void OnDecontaminate()
         {
-            cleanup();
+            decond = true;
         }
 
         public void OnRoundEnd(RoundEndEvent ev)
@@ -71,6 +72,7 @@ namespace Smod.TestPlugin
                 plugin.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
             }
             allowspawn = true;
+            decond = false;
             if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
@@ -102,6 +104,10 @@ namespace Smod.TestPlugin
 
         private byte TeamIDtoClassID(byte TeamID)
         {
+            if (decond && (TeamID == 3 || TeamID == 4 || TeamID == 0))
+            {
+                TeamID = 255;
+            }
             switch (TeamID)
             {
                 case (byte)Smod2.API.Team.SCP:
@@ -170,7 +176,7 @@ namespace Smod.TestPlugin
                     if (chosenclass == 255)
                     {
                         plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-                        chosenclass = (byte)Role.CLASSD;
+                        chosenclass = (byte)Role.FACILITY_GUARD;
                     }
                     else
                     {
@@ -184,7 +190,7 @@ namespace Smod.TestPlugin
                     if (chosenclass == 255)
                     {
                         plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-                        chosenclass = (byte)Role.CLASSD;
+                        chosenclass = (byte)Role.FACILITY_GUARD;
                     }
                 } else
                 {
@@ -216,7 +222,7 @@ namespace Smod.TestPlugin
                         if (chosenclass == 255)
                         {
                             plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-                            chosenclass = (byte)Role.CLASSD;
+                            chosenclass = (byte)Role.FACILITY_GUARD;
                         }
                     }
                 }
@@ -233,7 +239,7 @@ namespace Smod.TestPlugin
                     if (chosenclass == 255)
                     {
                         plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-                        chosenclass = (byte)Role.CLASSD;
+                        chosenclass = (byte)Role.FACILITY_GUARD;
                     }
                 }
                 number = (number + 1) % queue.Length;
