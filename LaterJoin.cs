@@ -59,7 +59,8 @@ namespace Smod.TestPlugin
             this.AddEventHandler(typeof(IEventHandlerPlayerJoin), events, Priority.High);
             this.AddEventHandler(typeof(IEventHandlerRoundStart), events, Priority.High);
             this.AddEventHandler(typeof(IEventHandlerRoundEnd), events, Priority.High);
-            this.AddEventHandler(typeof(IEventHandlerWarheadDetonate), events, Priority.Highest);
+            this.AddEventHandler(typeof(IEventHandlerWarheadDetonate), events, Priority.High);
+            this.AddEventHandler(typeof(IEventHandlerLCZDecontaminate), events, Priority.High);
             this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
             this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
         }

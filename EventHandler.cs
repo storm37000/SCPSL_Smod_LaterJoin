@@ -8,7 +8,7 @@ using System.Linq;
 namespace Smod.TestPlugin
 {
 
-    class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate
+    class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate
     {
 
         private Plugin plugin;
@@ -51,6 +51,11 @@ namespace Smod.TestPlugin
             cleanup();
         }
 
+        public void OnDecontaminate()
+        {
+            cleanup();
+        }
+
         public void OnRoundEnd(RoundEndEvent ev)
         {
             if (ev.Round.Duration >= 3)
@@ -61,6 +66,10 @@ namespace Smod.TestPlugin
 
         public void OnRoundStart(RoundStartEvent ev)
         {
+            if (ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", false))
+            {
+                plugin.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
+            }
             allowspawn = true;
             if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
