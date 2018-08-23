@@ -26,6 +26,19 @@ namespace Smod.TestPlugin
             this.plugin = plugin;
         }
 
+        private string RemoveSpecialCharacters(string str)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            foreach (char c in str)
+            {
+                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '.' || c == ',' || c == '_' || c == ' ' || c == '[' || c == ']' || c == '{' || c == '}')
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
+
         private void cleanup()
         {
             t.Enabled = false;
@@ -264,7 +277,7 @@ namespace Smod.TestPlugin
                 if (!result)
                 {
                     byte chosenclass = ChooseClass(player);
-                    plugin.Info("Player " + player.Name + " joined late!  Setting their class to " + chosenclass);
+                    plugin.Info("Player " + RemoveSpecialCharacters(player.Name) + " joined late!  Setting their class to " + chosenclass);
                     player.ChangeRole((Role)chosenclass, true, true);
                     blacklist.Add(player.SteamId);
                 }
