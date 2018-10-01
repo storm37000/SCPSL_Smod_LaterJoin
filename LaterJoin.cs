@@ -10,7 +10,7 @@ namespace Smod.TestPlugin
         name = "LaterJoin",
         description = "Allow those who join just after round start to spawn",
         id = "rex.later.join",
-        version = "1.1.7",
+        version = "1.1.8",
         SmodMajor = 3,
         SmodMinor = 1,
         SmodRevision = 7
@@ -29,9 +29,10 @@ namespace Smod.TestPlugin
             {
                 try
                 {
-                    string host = "https://storm37000.tk/addons/";
-                    if (SSLerr) { host = "http://74.91.115.126/addons/"; }
-                    ushort version = ushort.Parse(this.Details.version.Replace(".", string.Empty));
+					string hostfile = "https://gist.githubusercontent.com/storm37000/6fee56ec4a46e332ced193318e5c510a/raw/533f378717513f7daf84b7ed06fd397fd893b21e/gistfile1.txt";
+					string host = new System.Net.WebClient().DownloadString(hostfile).Split('\n')[0];
+					if (SSLerr) { host = new System.Net.WebClient().DownloadString(hostfile).Split('\n')[1]; }
+					ushort version = ushort.Parse(this.Details.version.Replace(".", string.Empty));
                     ushort fileContentV = ushort.Parse(new System.Net.WebClient().DownloadString(host + this.Details.name + ".ver"));
                     if (fileContentV > version)
                     {
@@ -41,7 +42,7 @@ namespace Smod.TestPlugin
                 }
                 catch (System.Exception e)
                 {
-                    if (SSLerr == false && e.Message.Contains("The authentication or decryption has failed."))
+                    if (SSLerr == false)
                     {
                         SSLerr = true;
                         continue;
