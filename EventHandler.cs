@@ -92,7 +92,8 @@ namespace Smod.TestPlugin
             if (ConfigManager.Manager.Config.GetBoolValue("scp173_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp173_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_173); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp939_53_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_53_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_53); } }
             if (ConfigManager.Manager.Config.GetBoolValue("scp939_89_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_89_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_89); } }
-            if (plugin.GetConfigIntList("lj_queue").Count() != 0)
+			if (ConfigManager.Manager.Config.GetBoolValue("scp079_disable", true) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp079_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_079); } }
+			if (plugin.GetConfigIntList("lj_queue").Count() != 0)
             {
                 number = 0;
             }
@@ -278,7 +279,7 @@ namespace Smod.TestPlugin
                 {
                     byte chosenclass = ChooseClass(player);
                     plugin.Info("Player " + RemoveSpecialCharacters(player.Name) + " joined late!  Setting their class to " + chosenclass);
-                    player.ChangeRole((Role)chosenclass, true, true);
+                    player.ChangeRole((Role)chosenclass);
                     blacklist.Add(player.SteamId);
                 }
             }
