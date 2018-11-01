@@ -4,7 +4,7 @@ using Smod2.Events;
 using Smod2.EventHandlers;
 using System;
 
-namespace Smod.LaterJoin
+namespace LaterJoin
 {
     [PluginDetails(
         author = "ShingekiNoRex, storm37000",
