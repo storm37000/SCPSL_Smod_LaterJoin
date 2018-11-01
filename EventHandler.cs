@@ -5,7 +5,7 @@ using Smod2.EventHandlers;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Smod.LaterJoin
+namespace LaterJoin
 {
 
     class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate
