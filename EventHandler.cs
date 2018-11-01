@@ -5,13 +5,13 @@ using Smod2.EventHandlers;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Smod.TestPlugin
+namespace Smod.LaterJoin
 {
 
     class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate
     {
 
-        private Plugin plugin;
+        private LaterJoinPlugin plugin;
         private bool allowspawn = false;
         private int number;
         private List<byte> FilledTeams = new List<byte>();
@@ -21,7 +21,7 @@ namespace Smod.TestPlugin
         private static readonly System.Random getrandom = new System.Random();
         private System.Timers.Timer t = new System.Timers.Timer();
 
-        public EventHandler(Plugin plugin)
+        public EventHandler(LaterJoinPlugin plugin)
         {
             this.plugin = plugin;
         }
