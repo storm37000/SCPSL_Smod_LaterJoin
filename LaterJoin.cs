@@ -1,10 +1,10 @@
-﻿using Smod2;
+using Smod2;
 using Smod2.Attributes;
 using Smod2.Events;
 using Smod2.EventHandlers;
 using System;
 
-namespace Smod.TestPlugin
+namespace Smod.LaterJoin
 {
     [PluginDetails(
         author = "ShingekiNoRex, storm37000",
@@ -14,9 +14,9 @@ namespace Smod.TestPlugin
         version = "1.1.10",
         SmodMajor = 3,
         SmodMinor = 1,
-        SmodRevision = 7
+        SmodRevision = 21
         )]
-    class LaterJoin : Plugin
+    class LaterJoinPlugin : Plugin
     {
         public override void OnDisable()
         {
