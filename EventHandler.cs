@@ -11,7 +11,7 @@ namespace LaterJoin
     class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate
     {
 
-        private LaterJoinPlugin plugin;
+        private Main plugin;
         private bool allowspawn = false;
         private int number;
         private List<byte> FilledTeams = new List<byte>();
@@ -21,7 +21,7 @@ namespace LaterJoin
         private static readonly System.Random getrandom = new System.Random();
         private System.Timers.Timer t = new System.Timers.Timer();
 
-        public EventHandler(LaterJoinPlugin plugin)
+        public EventHandler(Main plugin)
         {
             this.plugin = plugin;
         }
@@ -80,10 +80,6 @@ namespace LaterJoin
 
         public void OnRoundStart(RoundStartEvent ev)
         {
-            if (ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", false))
-            {
-                plugin.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
-            }
             allowspawn = true;
             decond = false;
             if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
@@ -178,11 +174,11 @@ namespace LaterJoin
             byte chosenclass = (byte)Role.CLASSD;
             if (plugin.GetConfigIntList("lj_queue").Length == 0)
             {
-                string[] queuestr = ConfigFile.GetList("team_respawn_queue");
+                string[] queuestr = ConfigManager.Manager.Config.GetListValue("team_respawn_queue");
                 char[] queuechar = queuestr[0].ToCharArray();
                 byte[] queue = System.Array.ConvertAll(queuechar, c => (byte)System.Char.GetNumericValue(c));
                 plugin.Debug("no special queue, using vanilla queue.");
-                if (FilledTeams.Count < queue.Length && ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", false) == false)
+                if (FilledTeams.Count < queue.Length && ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true) == false)
                 {
                     plugin.Debug("is within index");
                     byte chosenteam = queue[FilledTeams.Count];
@@ -197,7 +193,7 @@ namespace LaterJoin
                         FilledTeams.Add(chosenteam);
                     }
                 }
-                else if(ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", false) == false)
+                else if(ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true) == false)
                 {
                     plugin.Debug("is outside index, using filler");
                     chosenclass = TeamIDtoClassID((byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", chosenclass));
