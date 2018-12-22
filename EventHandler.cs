@@ -125,8 +125,8 @@ namespace LaterJoin
                 case (byte)Smod2.API.Team.NINETAILFOX:
                     return (byte)Role.FACILITY_GUARD;
                 case (byte)Smod2.API.Team.CHAOS_INSURGENCY:
-                    return (byte)Role.CHAOS_INSUGENCY;
-                case (byte)Smod2.API.Team.SCIENTISTS:
+                    return (byte)Role.CHAOS_INSURGENCY;
+                case (byte)Smod2.API.Team.SCIENTIST:
                     return (byte)Role.SCIENTIST;
                 case (byte)Smod2.API.Team.CLASSD:
                     return (byte)Role.CLASSD;
