@@ -5,22 +5,22 @@ using Smod2.EventHandlers;
 
 namespace LaterJoin
 {
-    [PluginDetails(
-        author = "ShingekiNoRex, storm37000",
-        name = "LaterJoin",
-        description = "Allow those who join just after round start to spawn",
-        id = "rex.laterjoin",
-        version = "1.1.12",
-        SmodMajor = 3,
-        SmodMinor = 2,
-        SmodRevision = 0
-        )]
-    class Main : Plugin
-    {
-        public override void OnDisable()
-        {
-            this.Info(this.Details.name + " has been disabled.");
-        }
+	[PluginDetails(
+		author = "ShingekiNoRex, storm37000",
+		name = "LaterJoin",
+		description = "Allow those who join just after round start to spawn",
+		id = "rex.laterjoin",
+		version = "1.1.12",
+		SmodMajor = 3,
+		SmodMinor = 2,
+		SmodRevision = 0
+		)]
+	class Main : Plugin
+	{
+		public override void OnDisable()
+		{
+			this.Info(this.Details.name + " has been disabled.");
+		}
 		public override void OnEnable()
 		{
 			this.Info(this.Details.name + " has been enabled.");
@@ -58,20 +58,20 @@ namespace LaterJoin
 		}
 
 		public override void Register()
-        {
-            // Register Events
-            EventHandler events = new EventHandler(this);
-            this.AddEventHandler(typeof(IEventHandlerPlayerJoin), events, Priority.High);
-            this.AddEventHandler(typeof(IEventHandlerRoundStart), events, Priority.High);
-            this.AddEventHandler(typeof(IEventHandlerRoundEnd), events, Priority.High);
-            this.AddEventHandler(typeof(IEventHandlerWarheadDetonate), events, Priority.High);
-            this.AddEventHandler(typeof(IEventHandlerLCZDecontaminate), events, Priority.High);
-            this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
-            this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
+		{
+			// Register Events
+			EventHandler events = new EventHandler(this);
+			this.AddEventHandler(typeof(IEventHandlerPlayerJoin), events, Priority.High);
+			this.AddEventHandler(typeof(IEventHandlerRoundStart), events, Priority.High);
+			this.AddEventHandler(typeof(IEventHandlerRoundEnd), events, Priority.High);
+			this.AddEventHandler(typeof(IEventHandlerWarheadDetonate), events, Priority.High);
+			this.AddEventHandler(typeof(IEventHandlerLCZDecontaminate), events, Priority.High);
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
 			if (ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true))
 			{
 				this.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
 			}
 		}
-    }
+	}
 }
