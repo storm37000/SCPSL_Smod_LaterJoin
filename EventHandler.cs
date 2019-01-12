@@ -91,7 +91,7 @@ namespace LaterJoin
 			}
 
 			fillerTeam = (byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", (byte)Smod2.API.Team.NINETAILFOX);
-			if (!System.Enum.IsDefined(typeof(Team), fillerTeam))
+			if (!System.Enum.IsDefined(typeof(Team), (int)fillerTeam))
 			{
 				plugin.Error("your filler_team_id contains an invalid value!  The default will be used.");
 				fillerTeam = (byte)Smod2.API.Team.NINETAILFOX;
