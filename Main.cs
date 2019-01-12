@@ -1,7 +1,5 @@
 using Smod2;
 using Smod2.Attributes;
-using Smod2.Events;
-using Smod2.EventHandlers;
 
 namespace LaterJoin
 {
@@ -10,7 +8,7 @@ namespace LaterJoin
 		name = "LaterJoin",
 		description = "Allow those who join just after round start to spawn",
 		id = "rex.laterjoin",
-		version = "1.1.12",
+		version = "1.1.13",
 		SmodMajor = 3,
 		SmodMinor = 2,
 		SmodRevision = 0
@@ -60,18 +58,11 @@ namespace LaterJoin
 		public override void Register()
 		{
 			// Register Events
-			EventHandler events = new EventHandler(this);
-			this.AddEventHandler(typeof(IEventHandlerPlayerJoin), events, Priority.High);
-			this.AddEventHandler(typeof(IEventHandlerRoundStart), events, Priority.High);
-			this.AddEventHandler(typeof(IEventHandlerRoundEnd), events, Priority.High);
-			this.AddEventHandler(typeof(IEventHandlerWarheadDetonate), events, Priority.High);
-			this.AddEventHandler(typeof(IEventHandlerLCZDecontaminate), events, Priority.High);
+			this.AddEventHandlers(new EventHandler(this));
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
-			this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
-			if (ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true))
-			{
-				this.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
-			}
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] {}, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn", false, Smod2.Config.SettingType.BOOL, true, ""));
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn_delay", 5, Smod2.Config.SettingType.NUMERIC, true, ""));
 		}
 	}
 }

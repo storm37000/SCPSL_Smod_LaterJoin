@@ -4,26 +4,132 @@ using Smod2.Events;
 using Smod2.EventHandlers;
 using System.Collections.Generic;
 using System.Linq;
+using Smod2.EventSystem.Events;
 
 namespace LaterJoin
 {
 
-	class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate
+	class EventHandler : IEventHandlerPlayerJoin, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate, IEventHandlerWaitingForPlayers, IEventHandlerDecideTeamRespawnQueue, IEventHandlerPlayerDie
 	{
 
 		private Main plugin;
-		private bool allowspawn = false;
-		private int number;
+		private bool roundstarted = false;
+		private int number = 0;
 		private List<byte> FilledTeams = new List<byte>();
 		private List<string> blacklist = new List<string>();
 		private List<byte> enabledSCPs = new List<byte>();
 		private bool decond = false;
 		private static readonly System.Random getrandom = new System.Random();
-		private System.Timers.Timer t = new System.Timers.Timer();
+		private int time = 0;
+		private bool detonated = false;
+		private byte fillerTeam = 4;
+		private bool hasSmartCPicker = true;
+		private int[] spqueue;
+		private byte[] queue;
+		private bool infAutoRespawn = false;
+		private int autoRespawnDelay = 5;
 
 		public EventHandler(Main plugin)
 		{
 			this.plugin = plugin;
+		}
+
+		public void OnDetonate()
+		{
+			detonated = true;
+		}
+
+		public void OnDecontaminate()
+		{
+			decond = true;
+		}
+
+		public void OnRoundEnd(RoundEndEvent ev)
+		{
+			if (ev.Round.Duration >= 3)
+			{
+				FilledTeams.Clear();
+				blacklist.Clear();
+				enabledSCPs.Clear();
+				number = 0;
+				roundstarted = false;
+				decond = false;
+				detonated = false;
+			}
+		}
+
+		public void OnWaitingForPlayers(WaitingForPlayersEvent ev)
+		{
+			if (ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true))
+			{
+				plugin.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
+				hasSmartCPicker = true;
+			}
+
+			if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
+			if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
+			if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
+			if (ConfigManager.Manager.Config.GetBoolValue("scp173_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp173_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_173); } }
+			if (ConfigManager.Manager.Config.GetBoolValue("scp939_53_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_53_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_53); } }
+			if (ConfigManager.Manager.Config.GetBoolValue("scp939_89_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_89_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_89); } }
+			if (ConfigManager.Manager.Config.GetBoolValue("scp079_disable", true) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp079_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_079); } }
+
+			time = plugin.GetConfigInt("lj_time");
+			if (time < -1)
+			{
+				plugin.Error("Config for lj_time of " + time + " is not a valid value! Using default instead.");
+				time = 30;
+			}
+
+			infAutoRespawn = plugin.GetConfigBool("lj_InfAutoRespawn");
+
+			autoRespawnDelay = plugin.GetConfigInt("lj_InfAutoRespawn_delay");
+			if (time < 1)
+			{
+				plugin.Error("Config for lj_InfAutoRespawn_delay of " + time + " is not a valid value! Using default instead.");
+				autoRespawnDelay = 5;
+			}
+
+			fillerTeam = (byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", (byte)Smod2.API.Team.NINETAILFOX);
+			if (!System.Enum.IsDefined(typeof(Team), fillerTeam))
+			{
+				plugin.Error("your filler_team_id contains an invalid value!  The default will be used.");
+				fillerTeam = (byte)Smod2.API.Team.NINETAILFOX;
+			}
+
+			spqueue = plugin.GetConfigIntList("lj_queue");
+			foreach (int v in spqueue)
+			{
+				if (!System.Enum.IsDefined(typeof(Role), v))
+				{
+					plugin.Error("your lj_queue contains an invalid value!  It will not be used.");
+					spqueue = new int[] { };
+					break;
+				}
+			}
+
+			string[] queuestr = ConfigManager.Manager.Config.GetListValue("team_respawn_queue");
+			char[] queuechar = queuestr[0].ToCharArray();
+			queue = System.Array.ConvertAll(queuechar, c => (byte)System.Char.GetNumericValue(c));
+		}
+
+		public void OnDecideTeamRespawnQueue(DecideRespawnQueueEvent ev)
+		{
+			foreach (Team team in ev.Teams)
+			{
+				FilledTeams.Add((byte)team);
+			}
+		}
+
+		public void OnRoundStart(RoundStartEvent ev)
+		{
+			plugin.Info("LJ: round start!");
+			roundstarted = true;
+			foreach (Player player in ev.Server.GetPlayers())
+			{
+				blacklist.Add(player.SteamId);
+				if (enabledSCPs.Contains((byte)player.TeamRole.Role)) { enabledSCPs.Remove((byte)player.TeamRole.Role); }
+			}
 		}
 
 		private string RemoveSpecialCharacters(string str)
@@ -39,89 +145,28 @@ namespace LaterJoin
 			return sb.ToString();
 		}
 
-		private void cleanup()
-		{
-			t.Enabled = false;
-			if (allowspawn) { allowspawn = false; }
-			FilledTeams.Clear();
-			blacklist.Clear();
-			enabledSCPs.Clear();
-		}
-
-		private void InitTimer(int time)
-		{
-			t.Interval = time * 1000;
-			t.AutoReset = false;
-			t.Enabled = true;
-			t.Elapsed += delegate
-			{
-				plugin.Debug("Time Over");
-				cleanup();
-			};
-		}
-
-		public void OnDetonate()
-		{
-			cleanup();
-		}
-
-		public void OnDecontaminate()
-		{
-			decond = true;
-		}
-
-		public void OnRoundEnd(RoundEndEvent ev)
-		{
-			if (ev.Round.Duration >= 3)
-			{
-				cleanup();
-			}
-		}
-
-		public void OnRoundStart(RoundStartEvent ev)
-		{
-			allowspawn = true;
-			decond = false;
-			if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
-			if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
-			if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
-			if (ConfigManager.Manager.Config.GetBoolValue("scp173_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp173_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_173); } }
-			if (ConfigManager.Manager.Config.GetBoolValue("scp939_53_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_53_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_53); } }
-			if (ConfigManager.Manager.Config.GetBoolValue("scp939_89_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp939_89_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_939_89); } }
-			if (ConfigManager.Manager.Config.GetBoolValue("scp079_disable", true) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp079_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_079); } }
-			if (plugin.GetConfigIntList("lj_queue").Count() != 0)
-			{
-				number = 0;
-			}
-			foreach (Player player in ev.Server.GetPlayers())
-			{
-				blacklist.Add(player.SteamId);
-				FilledTeams.Add((byte)player.TeamRole.Team);
-				if (enabledSCPs.Contains((byte)player.TeamRole.Role)) { enabledSCPs.Remove((byte)player.TeamRole.Role); }
-			}
-			int time = plugin.GetConfigInt("lj_time");
-			if (time != -1)
-			{
-				InitTimer(time);
-			} else if (time == -1)
-			{
-			} else
-			{
-				plugin.Error("Config for lj_time of " + time + " is not a valid value! Using default instead.");
-				InitTimer(30);
-			}
-		}
-
 		private byte TeamIDtoClassID(byte TeamID)
 		{
-			if (decond && (TeamID == 3 || TeamID == 4 || TeamID == 0))
+			if (decond && (!detonated) && (TeamID == 3 || TeamID == 4 || TeamID == 0 || TeamID == 6))
 			{
-				TeamID = 255;
+				plugin.Debug("Tried to select a team that cant spawn because LCZ DECON has occurred!");
+				return 255;
+			}
+			if (detonated && (TeamID == 3 || TeamID == 4 || TeamID == 0 || TeamID == 6))
+			{
+				plugin.Debug("Tried to select a team that cant spawn because warhead detonation has occurred!");
+				return 255;
 			}
 			switch (TeamID)
 			{
 				case (byte)Smod2.API.Team.SCP:
-					return enabledSCPs[getrandom.Next(0, enabledSCPs.Count)];
+					byte chosenscp = 255;
+					if (enabledSCPs.Count > 0)
+					{
+						chosenscp = enabledSCPs[getrandom.Next(0, enabledSCPs.Count)];
+					}
+					else { plugin.Debug("Attempted to choose an SCP but there are no more SCP slots left!"); }
+					return chosenscp;
 				case (byte)Smod2.API.Team.NINETAILFOX:
 					return (byte)Role.FACILITY_GUARD;
 				case (byte)Smod2.API.Team.CHAOS_INSURGENCY:
@@ -135,7 +180,7 @@ namespace LaterJoin
 				case (byte)Smod2.API.Team.TUTORIAL:
 					return (byte)Role.TUTORIAL;
 				default:
-					plugin.Error("Tried to select an invalid team! Attempting using filler!");
+					plugin.Error("Tried to select an invalid team!");
 					return 255;
 			}
 		}
@@ -169,40 +214,39 @@ namespace LaterJoin
 			return OutList;
 		}
 
+		private byte getfiller()
+		{
+			byte chosenclass = TeamIDtoClassID(fillerTeam);
+			if (spqueue.Length > 0)
+			{
+				chosenclass = (byte)spqueue[number];
+				number = (number + 1) % spqueue.Length;
+			}
+			return chosenclass;
+		}
+
 		private byte ChooseClass(Player player)
 		{
-			byte chosenclass = (byte)Role.CLASSD;
-			if (plugin.GetConfigIntList("lj_queue").Length == 0)
+			byte chosenclass = 255;
+			while (chosenclass == 255)
 			{
-				string[] queuestr = ConfigManager.Manager.Config.GetListValue("team_respawn_queue");
-				char[] queuechar = queuestr[0].ToCharArray();
-				byte[] queue = System.Array.ConvertAll(queuechar, c => (byte)System.Char.GetNumericValue(c));
-				plugin.Debug("no special queue, using vanilla queue.");
-				if (FilledTeams.Count < queue.Length && ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true) == false)
+				if (FilledTeams.Count < queue.Length && hasSmartCPicker == false)
 				{
 					plugin.Debug("is within index");
 					byte chosenteam = queue[FilledTeams.Count];
 					chosenclass = TeamIDtoClassID(chosenteam);
-					if (chosenclass == 255)
-					{
-						plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-						chosenclass = (byte)Role.FACILITY_GUARD;
-					}
-					else
-					{
-						FilledTeams.Add(chosenteam);
-					}
+					FilledTeams.Add(chosenteam);
 				}
-				else if(ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true) == false)
+				else if (hasSmartCPicker == false)
 				{
 					plugin.Debug("is outside index, using filler");
-					chosenclass = TeamIDtoClassID((byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", chosenclass));
+					chosenclass = getfiller();
 					if (chosenclass == 255)
 					{
-						plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-						chosenclass = (byte)Role.FACILITY_GUARD;
+						break;
 					}
-				} else
+				}
+				else
 				{
 					plugin.Debug("Smart Class Picker is enabled! doing special case for that.");
 					List<byte> Leftover = new List<byte>();
@@ -217,67 +261,59 @@ namespace LaterJoin
 							{
 								Leftover.Add(kvp.Key);
 							}
-						} else { Leftover.Add(kvp.Key); }
+						}
+						else { Leftover.Add(kvp.Key); }
 					}
-					byte chosenteam;
 					if (Leftover.Count != 0)
 					{
-						chosenteam = Leftover[getrandom.Next(0, Leftover.Count)];
+						byte chosenteam = Leftover[getrandom.Next(0, Leftover.Count)];
 						FilledTeams.Add(chosenteam);
 						chosenclass = TeamIDtoClassID(chosenteam);
-					} else
+					}
+					else
 					{
 						plugin.Debug("no more class slots left, using filler.");
-						chosenclass = TeamIDtoClassID((byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", chosenclass));
+						chosenclass = getfiller();
 						if (chosenclass == 255)
 						{
-							plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-							chosenclass = (byte)Role.FACILITY_GUARD;
+							break;
 						}
 					}
 				}
 			}
-			else
-			{
-				int[] queue = plugin.GetConfigIntList("lj_queue");
-				plugin.Debug("queue[number]:" + queue[number]);
-				chosenclass = (byte)queue[number];
-				if (!System.Enum.IsDefined(typeof(Role), (int)chosenclass))
-				{
-					plugin.Error(chosenclass + " is not a valid class ID!  Setting ID to filler.");
-					chosenclass = TeamIDtoClassID((byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", chosenclass));
-					if (chosenclass == 255)
-					{
-						plugin.Error("Your filler_team_id is set to an invalid value! Using default!");
-						chosenclass = (byte)Role.FACILITY_GUARD;
-					}
-				}
-				number = (number + 1) % queue.Length;
-			}
+		return chosenclass;
+		}
+
+		private byte spawnPlayer(Player player)
+		{
+			byte chosenclass = ChooseClass(player);
+			player.ChangeRole((Role)chosenclass);
 			return chosenclass;
 		}
 
 		public void OnPlayerJoin(PlayerJoinEvent ev)
 		{
-			Player player = ev.Player;
-			if (allowspawn && (player.TeamRole.Team == Smod2.API.Team.NONE || player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
+			if (roundstarted && ((time >= PluginManager.Manager.Server.Round.Duration) || time == -1) && (!blacklist.Contains(ev.Player.SteamId)) && (ev.Player.TeamRole.Team == Smod2.API.Team.NONE || ev.Player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
 			{
-				bool result = false;
-				foreach (string name in blacklist)
+				plugin.Info("Player " + RemoveSpecialCharacters(ev.Player.Name) + " joined late!  Setting their class to " + spawnPlayer(ev.Player));
+				blacklist.Add(ev.Player.SteamId);
+			}
+		}
+
+		public void OnPlayerDie(PlayerDeathEvent ev)
+		{
+			if (infAutoRespawn)
+			{
+				plugin.Debug("Player " + RemoveSpecialCharacters(ev.Player.Name) + " died!  Respawning them in " + autoRespawnDelay + " seconds!");
+				System.Timers.Timer t = new System.Timers.Timer();
+				t.Interval = autoRespawnDelay * 1000;
+				t.AutoReset = false;
+				t.Enabled = true;
+				t.Elapsed += delegate
 				{
-					if (name == player.SteamId)
-					{
-						result = true;
-						break;
-					}
-				}
-				if (!result)
-				{
-					byte chosenclass = ChooseClass(player);
-					plugin.Info("Player " + RemoveSpecialCharacters(player.Name) + " joined late!  Setting their class to " + chosenclass);
-					player.ChangeRole((Role)chosenclass);
-					blacklist.Add(player.SteamId);
-				}
+					plugin.Debug("Respawning " + RemoveSpecialCharacters(ev.Player.Name) + " as a class of " + spawnPlayer(ev.Player));
+
+				};
 			}
 		}
 	}
