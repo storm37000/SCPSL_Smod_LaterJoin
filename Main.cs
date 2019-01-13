@@ -15,6 +15,8 @@ namespace LaterJoin
 		)]
 	class Main : Plugin
 	{
+		public bool infAutoRespawn = false;
+
 		public override void OnDisable()
 		{
 			this.Info(this.Details.name + " has been disabled.");
@@ -59,8 +61,10 @@ namespace LaterJoin
 		{
 			// Register Events
 			this.AddEventHandlers(new EventHandler(this));
+			this.AddCommands(new string[] { "lj_deathmatch" }, new CommandHandlerDeathmatch(this));
+
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
-			this.AddConfig(new Smod2.Config.ConfigSetting("lj_queue", new int[] {}, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_FillerTeamQueue", new int[] {}, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn", false, Smod2.Config.SettingType.BOOL, true, ""));
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn_delay", 5, Smod2.Config.SettingType.NUMERIC, true, ""));
 		}
