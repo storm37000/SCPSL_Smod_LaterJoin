@@ -232,6 +232,7 @@ namespace LaterJoin
 			if (chosenclass != 255)
 			{
 				player.ChangeRole((Role)chosenclass);
+				if (enabledSCPs.Contains(chosenclass)) { enabledSCPs.Remove(chosenclass); }
 				return "" + (Smod2.API.Role)chosenclass;
 			} else
 			{
@@ -245,6 +246,7 @@ namespace LaterJoin
 			if (roundstarted && ((time >= PluginManager.Manager.Server.Round.Duration) || time == -1) && (!blacklist.Contains(ev.Player.SteamId)) && (ev.Player.TeamRole.Team == Smod2.API.Team.NONE || ev.Player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
 			{
 				plugin.Info("Player " + RemoveSpecialCharacters(ev.Player.Name) + " joined late!  Setting their class to " + spawnPlayer(ev.Player));
+				blacklist.Add(ev.Player.SteamId);
 			}
 		}
 
