@@ -3,7 +3,6 @@ using Smod2.API;
 using Smod2.Events;
 using Smod2.EventHandlers;
 using System.Collections.Generic;
-using Smod2.EventSystem.Events;
 
 namespace LaterJoin
 {
@@ -22,7 +21,6 @@ namespace LaterJoin
 		private int time = 0;
 		private bool detonated = false;
 		private byte fillerTeam;
-		private bool hasSmartCPicker = true;
 		private int[] spqueue;
 		private byte[] queue;
 		private int autoRespawnDelay = 5;
@@ -59,12 +57,6 @@ namespace LaterJoin
 
 		public void OnWaitingForPlayers(WaitingForPlayersEvent ev)
 		{
-			if (ConfigManager.Manager.Config.GetBoolValue("smart_class_picker", true))
-			{
-				plugin.Info("smart_class_picker is enabled! the addon will behave unexpectedly with it enabled, it is recommended to turn it off.");
-				hasSmartCPicker = true;
-			}
-
 			if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
 			if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
 			if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
@@ -204,21 +196,16 @@ namespace LaterJoin
 			{
 				attempt++;
 				plugin.Debug("Choosing class... attempt #" + attempt);
-				if (hasSmartCPicker == false && FilledTeams.Count < queue.Length)
+				if (FilledTeams.Count < queue.Length)
 				{
 					plugin.Debug("is within index");
 					byte chosenteam = queue[FilledTeams.Count];
 					chosenclass = TeamIDtoClassID(chosenteam);
 					FilledTeams.Add(chosenteam);
 				}
-				else if (hasSmartCPicker == false)
-				{
-					plugin.Debug("is outside index, using filler");
-					chosenclass = getfiller();
-				}
 				else
 				{
-					plugin.Debug("smart class picker is enabled so using filler");
+					plugin.Debug("is outside index, using filler");
 					chosenclass = getfiller();
 				}
 			}
