@@ -3,3 +3,6 @@
 Properties/AssemblyInfo.cs
 obj/*
 bin/*
+/.vs
+/LaterJoin.csproj.user
+/LaterJoin.sln

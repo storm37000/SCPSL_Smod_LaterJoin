@@ -75,9 +75,9 @@ namespace LaterJoin
 			plugin.infAutoRespawn = plugin.GetConfigBool("lj_InfAutoRespawn");
 
 			autoRespawnDelay = plugin.GetConfigInt("lj_InfAutoRespawn_delay");
-			if (time < 1)
+			if (autoRespawnDelay < 1)
 			{
-				plugin.Error("Config for lj_InfAutoRespawn_delay of " + time + " is not a valid value! Using default instead.");
+				plugin.Error("Config for lj_InfAutoRespawn_delay of " + autoRespawnDelay + " is not a valid value! Using default instead.");
 				autoRespawnDelay = 5;
 			}
 
