@@ -8,7 +8,7 @@ namespace LaterJoin
 		name = "LaterJoin",
 		description = "Allow those who join just after round start to spawn",
 		id = "rex.laterjoin",
-		version = "1.1.14",
+		version = "1.1.15",
 		SmodMajor = 3,
 		SmodMinor = 2,
 		SmodRevision = 0
