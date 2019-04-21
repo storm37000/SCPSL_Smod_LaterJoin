@@ -8,7 +8,7 @@ namespace LaterJoin
 		name = "LaterJoin",
 		description = "Allow those who join just after round start to spawn",
 		id = "rex.laterjoin",
-		version = "1.1.15",
+		version = "1.1.16",
 		SmodMajor = 3,
 		SmodMinor = 2,
 		SmodRevision = 0
@@ -16,6 +16,7 @@ namespace LaterJoin
 	class Main : Plugin
 	{
 		public bool infAutoRespawn = false;
+		public bool LJenabled = true;
 
 		public override void OnDisable()
 		{
@@ -62,6 +63,7 @@ namespace LaterJoin
 			// Register Events
 			this.AddEventHandlers(new EventHandler(this));
 			this.AddCommands(new string[] { "lj_deathmatch" }, new CommandHandlerDeathmatch(this));
+			this.AddCommands(new string[] { "lj_toggle" }, new CommandHandlerToggle(this));
 
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_time", 30, Smod2.Config.SettingType.NUMERIC, true, ""));
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_FillerTeamQueue", new int[] {}, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));

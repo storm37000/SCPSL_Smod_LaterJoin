@@ -232,10 +232,13 @@ namespace LaterJoin
 
 		public void OnPlayerJoin(PlayerJoinEvent ev)
 		{
-			if (roundstarted && ((time >= PluginManager.Manager.Server.Round.Duration) || time == -1) && (!blacklist.Contains(ev.Player.SteamId)) && (ev.Player.TeamRole.Team == Smod2.API.Team.NONE || ev.Player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
+			if (plugin.LJenabled)
 			{
-				plugin.Info("Player " + RemoveSpecialCharacters(ev.Player.Name) + " joined late!  Setting their class to " + spawnPlayer(ev.Player));
-				blacklist.Add(ev.Player.SteamId);
+				if (roundstarted && ((time >= PluginManager.Manager.Server.Round.Duration) || time == -1) && (!blacklist.Contains(ev.Player.SteamId)) && (ev.Player.TeamRole.Team == Smod2.API.Team.NONE || ev.Player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
+				{
+					plugin.Info("Player " + RemoveSpecialCharacters(ev.Player.Name) + " joined late!  Setting their class to " + spawnPlayer(ev.Player));
+					blacklist.Add(ev.Player.SteamId);
+				}
 			}
 		}
 
