@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace LaterJoin
 {
 
-	class EventHandler : IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerPlayerJoin, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate, IEventHandlerWaitingForPlayers, IEventHandlerPlayerDie
+	class EventHandler : IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerPlayerJoin, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate, IEventHandlerWaitingForPlayers, IEventHandlerPlayerDie, IEventHandlerSetConfig
 	{
 
 		private Main plugin;
@@ -57,6 +57,10 @@ namespace LaterJoin
 
 		public void OnWaitingForPlayers(WaitingForPlayersEvent ev)
 		{
+			if (!plugin.UpToDate)
+			{
+				plugin.outdatedmsg();
+			}
 			if (ConfigManager.Manager.Config.GetBoolValue("scp049_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp049_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_049); } }
 			if (ConfigManager.Manager.Config.GetBoolValue("scp096_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp096_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_096); } }
 			if (ConfigManager.Manager.Config.GetBoolValue("scp106_disable", false) == false) { for (byte a = 0; a < (byte)ConfigManager.Manager.Config.GetIntValue("scp106_amount", 1); a++) { enabledSCPs.Add((byte)Role.SCP_106); } }
@@ -257,6 +261,14 @@ namespace LaterJoin
 					plugin.Info("Respawning " + RemoveSpecialCharacters(ev.Player.Name) + " as a class of " + spawnPlayer(ev.Player));
 
 				};
+			}
+		}
+		public void OnSetConfig(SetConfigEvent ev)
+		{
+			if (ev.Key == "smart_class_picker" && (bool)ev.Value == true)
+			{
+				plugin.Info("smart_class_picker is set to true!  Disabling it as we are unable to support it.");
+				ev.Value = false;
 			}
 		}
 	}
