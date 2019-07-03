@@ -12,7 +12,7 @@ namespace LaterJoin
 		name = "LaterJoin",
 		description = "Allow those who join just after round start to spawn",
 		id = "s37k.laterjoin",
-		version = "1.1.17",
+		version = "1.1.18",
 		SmodMajor = 3,
 		SmodMinor = 2,
 		SmodRevision = 0
