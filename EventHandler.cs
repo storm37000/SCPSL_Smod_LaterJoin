@@ -3,6 +3,7 @@ using Smod2.API;
 using Smod2.Events;
 using Smod2.EventHandlers;
 using System.Collections.Generic;
+using MEC;
 
 namespace LaterJoin
 {
@@ -12,7 +13,6 @@ namespace LaterJoin
 
 		private Main plugin;
 		private bool roundstarted = false;
-		private int number = 0;
 		private List<byte> FilledTeams = new List<byte>();
 		private List<string> blacklist = new List<string>();
 		private List<byte> enabledSCPs = new List<byte>();
@@ -21,7 +21,10 @@ namespace LaterJoin
 		private int time = 0;
 		private bool detonated = false;
 		private byte fillerTeam;
-		private int[] spqueue;
+
+		Queue<byte> spqueue = new Queue<byte>();
+		Queue<byte> infqueue = new Queue<byte>();
+
 		private byte[] queue;
 		private int autoRespawnDelay = 5;
 
@@ -47,7 +50,8 @@ namespace LaterJoin
 				FilledTeams.Clear();
 				blacklist.Clear();
 				enabledSCPs.Clear();
-				number = 0;
+				spqueue.Clear();
+				infqueue.Clear();
 				roundstarted = false;
 				decond = false;
 				detonated = false;
@@ -92,14 +96,28 @@ namespace LaterJoin
 				fillerTeam = (byte)Smod2.API.Team.NINETAILFOX;
 			}
 
-			spqueue = plugin.GetConfigIntList("lj_FillerTeamQueue");
-			foreach (int v in spqueue)
+			foreach (int v in plugin.GetConfigIntList("lj_FillerTeamQueue"))
 			{
-				if (!System.Enum.IsDefined(typeof(Smod2.API.Team), v))
+				if (System.Enum.IsDefined(typeof(Smod2.API.Team), v))
 				{
-					plugin.Error("your lj_FillerTeamQueue contains an invalid value!  It will not be used.");
-					spqueue = new int[] { };
-					break;
+					spqueue.Enqueue((byte)v);
+
+				}
+				else
+				{
+					plugin.Error("your lj_FillerTeamQueue contains an invalid value of " + v + "!  It will not be used.");
+				}
+			}
+
+			foreach (int v in plugin.GetConfigIntList("lj_InfAutoRespawn_queue"))
+			{
+				if (System.Enum.IsDefined(typeof(Smod2.API.Team), v))
+				{
+					infqueue.Enqueue((byte)v);
+				}
+				else
+				{
+					plugin.Error("your lj_InfAutoRespawn_queue contains an invalid value of " + v + "!  It will not be used.");
 				}
 			}
 
@@ -110,7 +128,6 @@ namespace LaterJoin
 
 		public void OnRoundStart(RoundStartEvent ev)
 		{
-			plugin.Debug("round start!");
 			roundstarted = true;
 			foreach (Player player in ev.Server.GetPlayers())
 			{
@@ -158,7 +175,6 @@ namespace LaterJoin
 				case (byte)Smod2.API.Team.NINETAILFOX:
 					if (detonated)
 					{
-						plugin.Debug("Attempted to choose a facility guard but the warhead has already detonated!  Spawning NTF leutenant instead.");
 						return (byte)Smod2.API.Role.NTF_LIEUTENANT;
 					}
 					else
@@ -184,15 +200,16 @@ namespace LaterJoin
 		private byte getfiller()
 		{
 			byte chosenclass = TeamIDtoClassID(fillerTeam);
-			if (spqueue.Length > 0)
+			if (spqueue.Count > 0)
 			{
-				chosenclass = TeamIDtoClassID((byte)spqueue[number]);
-				number = (number + 1) % spqueue.Length;
+				byte temp = spqueue.Dequeue();
+				spqueue.Enqueue(temp);
+				chosenclass = TeamIDtoClassID(temp);
 			}
 			return chosenclass;
 		}
 
-		private byte ChooseClass()
+		private string spawnPlayer(Player player)
 		{
 			byte attempt = 0;
 			byte chosenclass = 255;
@@ -213,17 +230,9 @@ namespace LaterJoin
 					chosenclass = getfiller();
 				}
 			}
-			plugin.Debug("Choosing class finished on attempt #" + attempt);
-			return chosenclass;
-		}
-
-		private string spawnPlayer(Player player)
-		{
-			if (player.OverwatchMode) { return "Error, player in overwatch mode!"; }
-
-			byte chosenclass = ChooseClass();
 			if (chosenclass != 255)
 			{
+				plugin.Debug("Choosing class finished on attempt #" + attempt);
 				player.ChangeRole((Role)chosenclass);
 				if (enabledSCPs.Contains(chosenclass)) { enabledSCPs.Remove(chosenclass); }
 				return "" + (Smod2.API.Role)chosenclass;
@@ -234,11 +243,45 @@ namespace LaterJoin
 			
 		}
 
+		private string respawnPlayer(Player player)
+		{
+			byte attempt = 0;
+			byte chosenclass = 255;
+			while (chosenclass == 255 && attempt < 10)
+			{
+				attempt++;
+				plugin.Debug("Choosing class... attempt #" + attempt);
+				if (infqueue.Count > 0 )
+				{
+					byte temp = infqueue.Dequeue();
+					infqueue.Enqueue(temp);
+					chosenclass = TeamIDtoClassID(temp);
+				}
+				else
+				{
+					plugin.Debug("lj_InfAutoRespawn_queue is empty! Using fillers");
+					chosenclass = getfiller();
+				}
+			}
+			if (chosenclass != 255)
+			{
+				plugin.Debug("Choosing class finished on attempt #" + attempt);
+				player.ChangeRole((Role)chosenclass);
+				if (enabledSCPs.Contains(chosenclass)) { enabledSCPs.Remove(chosenclass); }
+				return "" + (Smod2.API.Role)chosenclass;
+			}
+			else
+			{
+				return "Error, could not select a spawnable class!";
+			}
+
+		}
+
 		public void OnPlayerJoin(PlayerJoinEvent ev)
 		{
 			if (plugin.LJenabled)
 			{
-				if (roundstarted && ((time >= PluginManager.Manager.Server.Round.Duration) || time == -1) && (!blacklist.Contains(ev.Player.SteamId)) && (ev.Player.TeamRole.Team == Smod2.API.Team.NONE || ev.Player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
+				if (roundstarted && ((time >= PluginManager.Manager.Server.Round.Duration) || time == -1) && (!ev.Player.OverwatchMode) && (!blacklist.Contains(ev.Player.SteamId)) && (ev.Player.TeamRole.Team == Smod2.API.Team.NONE || ev.Player.TeamRole.Team == Smod2.API.Team.SPECTATOR))
 				{
 					plugin.Info("Player " + RemoveSpecialCharacters(ev.Player.Name) + " joined late!  Setting their class to " + spawnPlayer(ev.Player));
 					blacklist.Add(ev.Player.SteamId);
@@ -246,26 +289,26 @@ namespace LaterJoin
 			}
 		}
 
+		IEnumerator<float> autoRespawn(Player player)
+		{
+			plugin.Info("Player " + RemoveSpecialCharacters(player.Name) + " died!  Respawning them in " + autoRespawnDelay + " seconds!");
+			yield return Timing.WaitForSeconds(autoRespawnDelay);
+			plugin.Info("Respawning " + RemoveSpecialCharacters(player.Name) + " as a class of " + spawnPlayer(player));
+		}
+
 		public void OnPlayerDie(PlayerDeathEvent ev)
 		{
 			if (plugin.infAutoRespawn)
 			{
-				if (ev.Player.OverwatchMode) { return; }
-				plugin.Info("Player " + RemoveSpecialCharacters(ev.Player.Name) + " died!  Respawning them in " + autoRespawnDelay + " seconds!");
-				System.Timers.Timer t = new System.Timers.Timer();
-				t.Interval = autoRespawnDelay * 1000;
-				t.AutoReset = false;
-				t.Enabled = true;
-				t.Elapsed += delegate
+				if (!ev.Player.OverwatchMode && ev.Player.Name != "Server")
 				{
-					plugin.Info("Respawning " + RemoveSpecialCharacters(ev.Player.Name) + " as a class of " + spawnPlayer(ev.Player));
-
-				};
+					Timing.RunCoroutine(autoRespawn(ev.Player));
+				}
 			}
 		}
 		public void OnSetConfig(SetConfigEvent ev)
 		{
-			if (ev.Key == "smart_class_picker" && (bool)ev.Value == true)
+			if (plugin.LJenabled && ev.Key == "smart_class_picker" && (bool)ev.Value == true)
 			{
 				plugin.Info("smart_class_picker is set to true!  Disabling it as we are unable to support it.");
 				ev.Value = false;

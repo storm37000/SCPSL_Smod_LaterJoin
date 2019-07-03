@@ -83,6 +83,7 @@ namespace LaterJoin
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_FillerTeamQueue", new int[] {}, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn", false, Smod2.Config.SettingType.BOOL, true, ""));
 			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn_delay", 5, Smod2.Config.SettingType.NUMERIC, true, ""));
+			this.AddConfig(new Smod2.Config.ConfigSetting("lj_InfAutoRespawn_queue", new int[] { }, Smod2.Config.SettingType.NUMERIC_LIST, true, ""));
 
 			try
 			{
