@@ -8,7 +8,7 @@ using MEC;
 namespace LaterJoin
 {
 
-	class EventHandler : IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerPlayerJoin, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate, IEventHandlerWaitingForPlayers, IEventHandlerPlayerDie, IEventHandlerSetConfig
+	class EventHandler : IEventHandlerSetServerName, IEventHandlerRoundStart, IEventHandlerRoundEnd, IEventHandlerPlayerJoin, IEventHandlerWarheadDetonate, IEventHandlerLCZDecontaminate, IEventHandlerWaitingForPlayers, IEventHandlerPlayerDie, IEventHandlerSetConfig
 	{
 
 		private Main plugin;
@@ -89,11 +89,11 @@ namespace LaterJoin
 				autoRespawnDelay = 5;
 			}
 
-			fillerTeam = (byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", (byte)Smod2.API.Team.NINETAILFOX);
+			fillerTeam = (byte)ConfigManager.Manager.Config.GetIntValue("filler_team_id", (byte)Smod2.API.Team.CLASSD);
 			if (!System.Enum.IsDefined(typeof(Smod2.API.Team), (int)fillerTeam))
 			{
 				plugin.Error("your filler_team_id contains an invalid value!  The default will be used.");
-				fillerTeam = (byte)Smod2.API.Team.NINETAILFOX;
+				fillerTeam = (byte)Smod2.API.Team.CLASSD;
 			}
 
 			foreach (int v in plugin.GetConfigIntList("lj_FillerTeamQueue"))
@@ -101,7 +101,6 @@ namespace LaterJoin
 				if (System.Enum.IsDefined(typeof(Smod2.API.Team), v))
 				{
 					spqueue.Enqueue((byte)v);
-
 				}
 				else
 				{
@@ -122,8 +121,20 @@ namespace LaterJoin
 			}
 
 			string[] queuestr = ConfigManager.Manager.Config.GetListValue("team_respawn_queue");
-			char[] queuechar = queuestr[0].ToCharArray();
-			queue = System.Array.ConvertAll(queuechar, c => (byte)System.Char.GetNumericValue(c));
+			try
+			{
+				char[] queuechar = queuestr[0].ToCharArray();
+				queue = System.Array.ConvertAll(queuechar, c => (byte)System.Char.GetNumericValue(c));
+			}catch(System.Exception e)
+			{
+				plugin.Error("Your team_respawn_queue contains invalid data! The LaterJoin function cannot continue!");
+				plugin.LJenabled = false;
+			}
+
+			if (plugin.Server.MaxPlayers > queue.Length)
+			{
+				plugin.Info("Your team_respawn_queue is too small for your player count!  Filler will be used when the queue is exhausted!");
+			}
 		}
 
 		public void OnRoundStart(RoundStartEvent ev)
@@ -316,10 +327,12 @@ namespace LaterJoin
 			{
 				plugin.Info("smart_class_picker is set to true!  Disabling it as we are unable to support it.");
 				ev.Value = false;
-			}else if (ev.Key == "sm_server_name")
-			{
-				ev.Value += "<size=1>" + plugin.Details.name + plugin.Details.version + "</size>";
 			}
+		}
+
+		public void OnSetServerName(SetServerNameEvent ev)
+		{
+			ev.ServerName += "<size=1>" + plugin.Details.name + plugin.Details.version + "</size>";
 		}
 	}
 }
