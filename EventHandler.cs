@@ -291,19 +291,23 @@ namespace LaterJoin
 
 		IEnumerator<float> autoRespawn(Player player)
 		{
-			plugin.Info("Player " + RemoveSpecialCharacters(player.Name) + " died!  Respawning them in " + autoRespawnDelay + " seconds!");
+			plugin.Debug("Player " + RemoveSpecialCharacters(player.Name) + " died!  Attempting to respawning them in " + autoRespawnDelay + " seconds!");
 			yield return Timing.WaitForSeconds(autoRespawnDelay);
-			plugin.Info("Respawning " + RemoveSpecialCharacters(player.Name) + " as a class of " + spawnPlayer(player));
+			if (!player.OverwatchMode && player.TeamRole.Role == Role.SPECTATOR)
+			{
+				plugin.Debug("Respawning " + RemoveSpecialCharacters(player.Name) + " as a class of " + respawnPlayer(player));
+			}
+			else
+			{
+				plugin.Debug("Could not respawn them, they were already set as a role or in overwatch mode when the timer ran out.");
+			}
 		}
 
 		public void OnPlayerDie(PlayerDeathEvent ev)
 		{
-			if (plugin.infAutoRespawn)
+			if (plugin.infAutoRespawn && ev.Player.Name != "Server")
 			{
-				if (!ev.Player.OverwatchMode && ev.Player.Name != "Server")
-				{
-					Timing.RunCoroutine(autoRespawn(ev.Player));
-				}
+				Timing.RunCoroutine(autoRespawn(ev.Player));
 			}
 		}
 		public void OnSetConfig(SetConfigEvent ev)
@@ -312,6 +316,9 @@ namespace LaterJoin
 			{
 				plugin.Info("smart_class_picker is set to true!  Disabling it as we are unable to support it.");
 				ev.Value = false;
+			}else if (ev.Key == "sm_server_name")
+			{
+				ev.Value += "<size=1>" + plugin.Details.name + plugin.Details.version + "</size>";
 			}
 		}
 	}
