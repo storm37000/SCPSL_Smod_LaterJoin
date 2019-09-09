@@ -304,13 +304,13 @@ namespace LaterJoin
 		{
 			plugin.Debug("Player " + RemoveSpecialCharacters(player.Name) + " died!  Attempting to respawning them in " + autoRespawnDelay + " seconds!");
 			yield return Timing.WaitForSeconds(autoRespawnDelay);
-			if (!player.OverwatchMode && player.TeamRole.Role == Role.SPECTATOR)
+			if (!player.OverwatchMode)
 			{
 				plugin.Debug("Respawning " + RemoveSpecialCharacters(player.Name) + " as a class of " + respawnPlayer(player));
 			}
 			else
 			{
-				plugin.Debug("Could not respawn them, they were already set as a role or in overwatch mode when the timer ran out.");
+				plugin.Debug("Could not respawn them, they were already set as a role (" + player.TeamRole.Role +") or in overwatch mode when the timer ran out.");
 			}
 		}
 
